@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">My Profile</h2>
+
+    <!-- Profile Display -->
+    <div id="profile-card" class="card p-4 shadow-sm mb-4"></div>
+    <div id="error-message" class="text-danger text-center mt-3"></div>
+
+    <!-- Edit Form -->
+    <div id="edit-section" class="card p-4 shadow-sm" style="display: none;">
+      <h5>Edit Profile</h5>
+
+      <div class="mb-3">
+        <label>Name</label>
+        <input type="text" id="edit-name" class="form-control">
+      </div>
+
+      <!-- Expert-only fields -->
+      <div id="expert-fields" style="display: none;">
+        <div class="mb-3">
+          <label>Qualifications</label>
+          <input type="text" id="edit-qualifications" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Experience Years</label>
+          <input type="number" id="edit-experience" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Quiz Score</label>
+          <input type="number" id="edit-quiz" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Resume URL</label>
+          <input type="text" id="edit-resume" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Portfolio URL</label>
+          <input type="text" id="edit-portfolio" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Expert Tags (comma-separated)</label>
+          <input type="text" id="edit-tags" class="form-control">
+        </div>
+      </div>
+
+      <!-- User-only fields -->
+      <div id="user-fields" style="display: none;">
+        <div class="mb-3">
+          <label>Phone</label>
+          <input type="text" id="edit-phone" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Bio</label>
+          <textarea id="edit-bio" class="form-control"></textarea>
+        </div>
+      </div>
+
+      <button class="btn btn-success" onclick="updateProfile()">Save Changes</button>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = "http://localhost:8000";
+    const token = localStorage.getItem("token");
+    let currentData = {};
+
+    fetch(`${BASE_URL}/profile`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.detail) {
+        document.getElementById("error-message").innerText = data.detail;
+        return;
+      }
+
+      currentData = data;
+
+      let html = `<h4 class="mb-3">${data.name}</h4>`;
+      html += `<p><strong>Email:</strong> ${data.email}</p>`;
+      html += `<p><strong>Role:</strong> ${data.role}</p>`;
+
+      if (data.role === "expert") {
+        html += `<p><strong>Trust Score:</strong> ${data.trust_score || "N/A"}</p>`;
+        html += `<p><strong>Verified:</strong> ${data.is_verified ? "Yes" : "No"}</p>`;
+        html += `<p><strong>Qualifications:</strong> ${data.qualifications || "-"}</p>`;
+        html += `<p><strong>Experience (years):</strong> ${data.experience_years || "-"}</p>`;
+        html += `<p><strong>Quiz Score:</strong> ${data.quiz_score ?? "-"}</p>`;
+        html += `<p><strong>Portfolio:</strong> ${data.portfolio_url || "-"}</p>`;
+        html += `<p><strong>Resume:</strong> ${data.proof_resume || "-"}</p>`;
+        html += `<p><strong>Tags:</strong> ${data.expert_tags?.join(", ") || "-"}</p>`;
+      } else if (data.role === "user") {
+        html += `<p><strong>Trust Score:</strong> ${data.trust_score || "N/A"}</p>`;
+        html += `<p><strong>Phone:</strong> ${data.phone || "-"}</p>`;
+        html += `<p><strong>Bio:</strong> ${data.bio || "-"}</p>`;
+      }
+
+      html += `<button class="btn btn-outline-primary mt-3" onclick="showEdit()">Edit Profile</button>`;
+      document.getElementById("profile-card").innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById("error-message").innerText = "Error fetching profile.";
+    });
+
+    function showEdit() {
+      const role = currentData.role;
+      document.getElementById("edit-section").style.display = "block";
+      document.getElementById("edit-name").value = currentData.name || "";
+
+      if (role === "expert") {
+        document.getElementById("expert-fields").style.display = "block";
+        document.getElementById("user-fields").style.display = "none";
+        document.getElementById("edit-qualifications").value = currentData.qualifications || "";
+        document.getElementById("edit-experience").value = currentData.experience_years || "";
+        document.getElementById("edit-quiz").value = currentData.quiz_score ?? "";
+        document.getElementById("edit-resume").value = currentData.proof_resume || "";
+        document.getElementById("edit-portfolio").value = currentData.portfolio_url || "";
+        document.getElementById("edit-tags").value = currentData.expert_tags?.join(", ") || "";
+      } else if (role === "user") {
+        document.getElementById("expert-fields").style.display = "none";
+        document.getElementById("user-fields").style.display = "block";
+        document.getElementById("edit-phone").value = currentData.phone || "";
+        document.getElementById("edit-bio").value = currentData.bio || "";
+      }
+    }
+
+    function updateProfile() {
+      const role = currentData.role;
+      const body = {
+        name: document.getElementById("edit-name").value
+      };
+
+      if (role === "expert") {
+        body.qualifications = document.getElementById("edit-qualifications").value;
+        body.experience_years = parseInt(document.getElementById("edit-experience").value);
+        body.quiz_score = parseInt(document.getElementById("edit-quiz").value);
+        body.proof_resume = document.getElementById("edit-resume").value;
+        body.portfolio_url = document.getElementById("edit-portfolio").value;
+        body.expert_tags = document.getElementById("edit-tags").value.split(",").map(tag => tag.trim());
+      } else if (role === "user") {
+        body.phone = document.getElementById("edit-phone").value;
+        body.bio = document.getElementById("edit-bio").value;
+      }
+
+      fetch(`${BASE_URL}/update_profile`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message || "Updated.");
+        location.reload();
+      })
+      .catch(() => alert("Failed to update profile."));
+    }
+  </script>
+</body>
+</html>
