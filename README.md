@@ -90,4 +90,4 @@ This approach ensures **fault-tolerance, adaptability, and efficient load balanc
 
 ---
 
-Do you want me to also create a **shorter version (lightweight README)** for GitHub (so recruiters can skim easily), or keep this detailed one?
+
