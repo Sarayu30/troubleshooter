@@ -28,7 +28,7 @@ This approach ensures **fault-tolerance, adaptability, and efficient load balanc
 *  **Fallback & Peer Forwarding** – Issues are retried or sent to another node if unresolved.
 *  **Real-time Chat** between user and expert using **WebSockets**.
 *  **Fault-Tolerant & Adaptive** to changing expert availability and fluctuating demand.
-*  **92% Expert Match Success Rate** in simulation testing.
+
 
 ---
 
